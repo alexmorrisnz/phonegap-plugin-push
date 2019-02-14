@@ -2,6 +2,12 @@
 
 [![Build Status](https://travis-ci.org/havesource/cordova-plugin-push.svg)](https://travis-ci.org/havesource/cordova-plugin-push)
 
+This is a fork of the original phonegap-plugin-push repository. The purpose is to include some open Pull Request while we wait for the developers to merge them in the original repository.
+
+Many thanks to merrygobyebye and BobCaSUaL for their fixes in iOS.
+
+# Warning
+
 > Register and receive push notifications
 
 # What is this?
