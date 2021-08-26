@@ -37,12 +37,33 @@
           <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
         </intent-filter>
       </service>
+      <!-- Pushy services and receivers-->
+      <receiver android:name="com.adobe.phonegap.push.PushReceiver" android:exported="false">
+        <intent-filter>
+          <action android:name="pushy.me" />
+        </intent-filter>
+      </receiver>
+      <receiver android:name="me.pushy.sdk.receivers.PushyUpdateReceiver" android:exported="false">
+        <intent-filter>
+          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+        </intent-filter>
+      </receiver>
+      <receiver android:name="me.pushy.sdk.receivers.PushyBootReceiver" android:exported="false">
+        <intent-filter>
+          <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        </intent-filter>
+      </receiver>
+      <service android:name="me.pushy.sdk.services.PushySocketService" android:stopWithTask="false" />
+      <service android:name="me.pushy.sdk.services.PushyJobService"
+        android:permission="android.permission.BIND_JOB_SERVICE"
+        android:stopWithTask="false" />
     </config-file>
     <preference name="ANDROID_SUPPORT_V13_VERSION" default="27.+"/>
     <preference name="FCM_VERSION" default="17.0.+"/>
     <framework src="com.android.support:support-v13:$ANDROID_SUPPORT_V13_VERSION"/>
     <framework src="me.leolin:ShortcutBadger:1.1.17@aar"/>
     <framework src="com.google.firebase:firebase-messaging:$FCM_VERSION"/>
+    <framework src="me.pushy:sdk:1.0.72"/>
     <dependency id="cordova-support-google-services" version="~1.2.0"/>
     <dependency id="phonegap-plugin-multidex" version="~1.0.0"/>
     <source-file src="src/android/com/adobe/phonegap/push/FCMService.java" target-dir="src/com/adobe/phonegap/push/"/>
@@ -52,6 +73,7 @@
     <source-file src="src/android/com/adobe/phonegap/push/PushPlugin.java" target-dir="src/com/adobe/phonegap/push/"/>
     <source-file src="src/android/com/adobe/phonegap/push/BackgroundActionButtonHandler.java" target-dir="src/com/adobe/phonegap/push/"/>
     <source-file src="src/android/com/adobe/phonegap/push/PushDismissedHandler.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushReceiver.java" target-dir="src/com/adobe/phonegap/push/"/>
   </platform>
   <platform name="browser">
     <js-module src="www/browser/push.js" name="BrowserPush">

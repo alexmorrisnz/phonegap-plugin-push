@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.support.v4.app.RemoteInput;
 
+import me.pushy.sdk.Pushy;
 
 public class PushHandlerActivity extends Activity implements PushConstants {
     private static String LOG_TAG = "Push_HandlerActivity";
@@ -29,6 +30,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
         Log.d(LOG_TAG, "not id = " + notId);
         gcm.setNotification(notId, "");
         super.onCreate(savedInstanceState);
+        Pushy.listen(this);
         Log.v(LOG_TAG, "onCreate");
         String callback = getIntent().getExtras().getString("callback");
         Log.d(LOG_TAG, "callback = " + callback);

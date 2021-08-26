@@ -12,9 +12,12 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
+
+import me.pushy.sdk.Pushy;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -171,6 +174,9 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
     gWebView = this.webView;
 
     if (INITIALIZE.equals(action)) {
+      if (!Pushy.isRegistered(getApplicationContext())) {
+        new RegisterForPushNotificationsAsync(this.cordova.getActivity()).execute();
+      }
       cordova.getThreadPool().execute(new Runnable() {
         public void run() {
           pushContext = callbackContext;
@@ -649,5 +655,53 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
   protected static void setRegistrationID(String token) {
     registration_id = token;
+  }
+  private class RegisterForPushNotificationsAsync extends AsyncTask<Void, Void, Object> {
+    Activity mActivity;
+
+    public RegisterForPushNotificationsAsync(Activity activity) {
+        this.mActivity = activity;
+    }
+
+    protected Object doInBackground(Void... params) {
+        try {
+            // Register the device for notifications
+            String deviceToken = Pushy.register(getApplicationContext());
+
+            // Registration succeeded, log token to logcat
+            Log.d("Pushy", "Pushy device token: " + deviceToken);
+
+            // Provide token to onPostExecute()
+            return deviceToken;
+        }
+        catch (Exception exc) {
+            // Registration failed, provide exception to onPostExecute()
+            return exc;
+        }
+    }
+
+    @Override
+    protected void onPostExecute(Object result) {
+        String message;
+
+        // Registration failed?
+        if (result instanceof Exception) {
+            // Log to console
+            Log.e("Pushy", result.toString());
+
+            // Display error in alert
+            message = ((Exception) result).getMessage();
+        }
+        else {
+            message = "Pushy device token: " + result.toString() + "\n\n(copy from logcat)";
+        }
+
+        // Registration succeeded, display an alert with the device token
+        new android.app.AlertDialog.Builder(this.mActivity)
+                .setTitle("Pushy")
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
   }
 }
