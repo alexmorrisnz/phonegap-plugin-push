@@ -127,8 +127,18 @@ class FCMService : FirebaseMessagingService() {
       extras.putString(PushConstants.COLOR, it.color)
     }
 
+    val fields = arrayOf("smallmessage", "fullmessage", "fullmessagehtml")
+
     for ((key, value) in message.data) {
-      extras.putString(key, value)
+      var messageValue = value
+      Log.d(TAG, key)
+      if (fields.contains(key)) {
+        messageValue = String(EncryptionHandler.decrypt(
+          android.util.Base64.decode(messageValue, android.util.Base64.DEFAULT)
+        ), Charsets.UTF_8)
+      }
+
+      extras.putString(key, messageValue)
     }
 
     if (isAvailableSender(from)) {
