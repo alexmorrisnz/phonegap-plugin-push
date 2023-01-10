@@ -1,10 +1,13 @@
 package com.adobe.phonegap.push
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Base64
+import android.util.Log
 import java.math.BigInteger
 import java.security.AlgorithmParameterGenerator
 import java.security.KeyPair
@@ -12,6 +15,7 @@ import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.spec.MGF1ParameterSpec
 import javax.crypto.Cipher
 import javax.crypto.spec.OAEPParameterSpec
 import javax.security.auth.x500.X500Principal
@@ -21,8 +25,14 @@ class EncryptionHandler(private val context: Context) {
         private const val TAG: String = "${PushPlugin.PREFIX_TAG} (EncryptionHandler)"
         const val ALIAS: String = "moodlemobile"
         const val KEYSTORE_NAME = "AndroidKeyStore"
-        const val CIPHER = "RSA/ECB/PKCS1Padding"
-        const val DIGEST = "SHA-512"
+        const val CIPHER = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"
+        const val DIGEST = "SHA-256"
+        val ALGO_SPEC = OAEPParameterSpec(
+            DIGEST,
+            "MGF1",
+            MGF1ParameterSpec.SHA1,
+            OAEPParameterSpec.DEFAULT.pSource
+        )
 
         /**
          * Decrypt with private key
@@ -31,13 +41,7 @@ class EncryptionHandler(private val context: Context) {
             val privateKey: PrivateKey? = getPrivateKey()
 
             val cipher = Cipher.getInstance(CIPHER)
-            val parameterSpec = OAEPParameterSpec(
-                DIGEST,
-                OAEPParameterSpec.DEFAULT.mgfAlgorithm,
-                OAEPParameterSpec.DEFAULT.mgfParameters,
-                OAEPParameterSpec.DEFAULT.pSource
-            )
-            cipher.init(Cipher.DECRYPT_MODE, privateKey)
+            cipher.init(Cipher.DECRYPT_MODE, privateKey, ALGO_SPEC)
 
             return cipher.doFinal(cipherText)
         }
@@ -49,13 +53,7 @@ class EncryptionHandler(private val context: Context) {
             val publicKey: PublicKey? = getPublicKey()
 
             val cipher = Cipher.getInstance(CIPHER)
-            val parameterSpec = OAEPParameterSpec(
-                DIGEST,
-                OAEPParameterSpec.DEFAULT.mgfAlgorithm,
-                OAEPParameterSpec.DEFAULT.mgfParameters,
-                OAEPParameterSpec.DEFAULT.pSource
-            )
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey, parameterSpec)
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey, ALGO_SPEC)
 
             return cipher.doFinal(plainText)
         }
@@ -100,6 +98,7 @@ class EncryptionHandler(private val context: Context) {
         }
     }
 
+    @SuppressLint("LongLogTag")
     fun getPublicKeyString(): String? {
         val publicKey: PublicKey = if (!keyExists()) {
             val keyPair = generateKeyPair()
@@ -109,7 +108,8 @@ class EncryptionHandler(private val context: Context) {
             tempKey
         }
         val publicKeyString =
-            android.util.Base64.encodeToString(publicKey.encoded, android.util.Base64.DEFAULT)
+            Base64.encodeToString(publicKey.encoded, android.util.Base64.DEFAULT)
+        Log.d(TAG, publicKeyString);
         return "-----BEGIN PUBLIC KEY-----\n$publicKeyString-----END PUBLIC KEY-----"
     }
 
@@ -132,7 +132,7 @@ class EncryptionHandler(private val context: Context) {
                             setBlockModes(KeyProperties.BLOCK_MODE_ECB)
                             setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
                             setDigests(
-                                KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512
+                                KeyProperties.DIGEST_SHA256
                             )
                             build()
                         }
