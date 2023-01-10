@@ -121,7 +121,7 @@ class FCMService : FirebaseMessagingService() {
 
     message.notification?.let {
       extras.putString(PushConstants.TITLE, it.title)
-      extras.putString(PushConstants.MESSAGE, it.body)
+      extras.putString(PushConstants.MESSAGE, String(EncryptionHandler.decrypt(android.util.Base64.decode(it.body, android.util.Base64.DEFAULT))))
       extras.putString(PushConstants.SOUND, it.sound)
       extras.putString(PushConstants.ICON, it.icon)
       extras.putString(PushConstants.COLOR, it.color)
@@ -131,7 +131,6 @@ class FCMService : FirebaseMessagingService() {
 
     for ((key, value) in message.data) {
       var messageValue = value
-      Log.d(TAG, key)
       if (fields.contains(key)) {
         messageValue = String(EncryptionHandler.decrypt(
           android.util.Base64.decode(messageValue, android.util.Base64.DEFAULT)
@@ -254,12 +253,12 @@ class FCMService : FirebaseMessagingService() {
      */
     return when {
       key == PushConstants.BODY
-        || key == PushConstants.ALERT
-        || key == PushConstants.MP_MESSAGE
-        || key == PushConstants.GCM_NOTIFICATION_BODY
-        || key == PushConstants.TWILIO_BODY
-        || key == messageKey
-        || key == PushConstants.AWS_PINPOINT_BODY
+              || key == PushConstants.ALERT
+              || key == PushConstants.MP_MESSAGE
+              || key == PushConstants.GCM_NOTIFICATION_BODY
+              || key == PushConstants.TWILIO_BODY
+              || key == messageKey
+              || key == PushConstants.AWS_PINPOINT_BODY
       -> {
         PushConstants.MESSAGE
       }
