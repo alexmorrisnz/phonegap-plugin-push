@@ -119,6 +119,8 @@ class FCMService : FirebaseMessagingService() {
 
     var extras = Bundle()
 
+    val isEncrypted = message.data.containsKey("encrypted") && message.data["encrypted"] == "1"
+
     message.notification?.let {
       extras.putString(PushConstants.TITLE, it.title)
       extras.putString(PushConstants.MESSAGE, it.body)
@@ -127,8 +129,23 @@ class FCMService : FirebaseMessagingService() {
       extras.putString(PushConstants.COLOR, it.color)
     }
 
+    val fields = arrayOf("userfromfullname", "userfromid", "sitefullname", "smallmessage",
+      "fullmessage", "fullmessagehtml", "subject", "contexturl")
+
     for ((key, value) in message.data) {
-      extras.putString(key, value)
+      var messageValue = value
+      if (fields.contains(key) && isEncrypted) {
+        messageValue = String(EncryptionHandler.decrypt(
+          android.util.Base64.decode(messageValue, android.util.Base64.DEFAULT)
+        ), Charsets.UTF_8)
+      }
+
+      extras.putString(key, messageValue)
+    }
+
+    if (isEncrypted) {
+      extras.putString(PushConstants.TITLE, extras.getString("sitefullname"))
+      extras.putString(PushConstants.MESSAGE, extras.getString("smallmessage"))
     }
 
     if (isAvailableSender(from)) {
